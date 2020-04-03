@@ -1,0 +1,16 @@
+[package]
+name = "hyuga"
+version = "0.1.0"
+authors = ["Pepeye <gaofolaju@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "2.0"
+actix-rt = "1.0"
+chrono = "0.4.11"
+futures = "0.3.4"
+ulid = "0.3.1"
+serde = "1.0.106"
+serde_json = "1.0.50"
