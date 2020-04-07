@@ -3,6 +3,7 @@ use chrono::Utc;
 use futures::future::{ready, Ready};
 use serde::{Serialize};
 use ulid::Ulid;
+use listenfd::ListenFd;
 
 struct AppState {
     app_name: &'static str
@@ -46,7 +47,8 @@ async fn greet(req: HttpRequest) -> impl Responder {
 
 #[actix_rt::main]   
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    let mut listenfd = ListenFd::from_env();
+    let mut server = HttpServer::new(|| {
         App::new()
             .wrap(middleware::Logger::default())
             .data(AppState {
@@ -54,8 +56,12 @@ async fn main() -> std::io::Result<()> {
             })
             .route("/", web::get().to(index))
             .route("/{name}", web::get().to(greet))
-    })
-    .bind("127.0.0.1:5000")?
-    .run()
-    .await
+    });
+
+    server = match listenfd.take_tcp_listener(0)? {
+        Some(listener) => server.listen(listener)?,
+        None => server.bind("127.0.0.1:5000")?,
+    };
+
+    server.run().await
 }
