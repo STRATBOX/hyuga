@@ -1,9 +1,12 @@
 use actix_web::{web, middleware, App, Error, HttpRequest, HttpResponse, HttpServer,  Responder};
 use chrono::Utc;
+use dotenv::dotenv;
 use futures::future::{ready, Ready};
 use serde::{Serialize};
-use ulid::Ulid;
 use listenfd::ListenFd;
+use ulid::Ulid;
+use std::env;
+use log::{info};
 
 struct AppState {
     app_name: &'static str
@@ -47,6 +50,9 @@ async fn greet(req: HttpRequest) -> impl Responder {
 
 #[actix_rt::main]   
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
+    env_logger::init();
+
     let mut listenfd = ListenFd::from_env();
     let mut server = HttpServer::new(|| {
         App::new()
@@ -60,8 +66,13 @@ async fn main() -> std::io::Result<()> {
 
     server = match listenfd.take_tcp_listener(0)? {
         Some(listener) => server.listen(listener)?,
-        None => server.bind("127.0.0.1:5000")?,
+        None => {
+            let host = env::var("HOST").expect("Host not set!");
+            let port = env::var("PORT").expect("Port not set");
+            server.bind(format!("{}:{}", host, port))?
+        }
     };
 
+    info!("Starting server...");
     server.run().await
 }
