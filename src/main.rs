@@ -8,6 +8,8 @@ use ulid::Ulid;
 use std::env;
 use log::{info};
 
+mod user;
+
 struct AppState {
     app_name: &'static str
 }
@@ -60,6 +62,7 @@ async fn main() -> std::io::Result<()> {
             .data(AppState {
                 app_name: "hyuga"
             })
+            .service(web::scope("/users").configure(user::endpoints))
             .route("/", web::get().to(index))
             .route("/{name}", web::get().to(greet))
     });
